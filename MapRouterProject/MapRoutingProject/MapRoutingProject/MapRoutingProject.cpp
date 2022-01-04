@@ -2,14 +2,15 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <queue>
+#include <stack>
 using namespace std;
 
 int verticesNum, edgesNum, routesNum;
-pair <double , double > locations[999999];
-vector<int> map[999999];
-pair<int, int> routes[999999];
+pair <long double , long double> locations[99999];
+vector<int> map[99999];
 
-void ReadInputs() {
+void ReadMap() {
     fstream myMap;
     string s;
     myMap.open("Map.txt");
@@ -40,43 +41,77 @@ void ReadInputs() {
         end = stoi(s);
         
         map[start].push_back(end);
+        map[end].push_back(start);
     }
 
     myMap.close();
+}
 
+long double calcDistance(pair<long double, long double> start, pair<long double, long double> end) {
+    return sqrt(pow(end.first - start.first, 2) +
+        pow(end.second - start.second, 2) * 1);
+}
+
+void findPath(int start, int end) {
+    stack<int> path;
+    vector<long double> distance(99999, 999999);
+    vector<int> from(99999, -1);
+    vector<int> visited(99999, 0);
+    queue<int> toVisit;
+    toVisit.push(start);
+    distance[start] = 0;
+    from[start] = start;
+    
+    while (!toVisit.empty()) {
+        int node = toVisit.front();
+        toVisit.pop();
+        if (visited[node]) continue;
+        visited[node] = 1;
+        for (int i = 0; i < map[node].size(); i++) {
+            int next = map[node][i];
+            if (calcDistance(locations[node], locations[next]) + distance[node] <= distance[next]) {
+                distance[next] = calcDistance(locations[node], locations[next]) + distance[node];
+                from[next] = node;
+                toVisit.push(next);
+            }
+        }
+    }
+    
+    for (int i = end; i != start; i = from[i]) path.push(i);
+    path.push(start);
+
+    while (!path.empty()) {
+        cout << path.top();
+        path.pop();
+        if (!path.empty()) cout << "-";
+    }
+}
+
+void solve() {
     fstream myRoutes;
-    myRoutes.open("Routes.txt");
+    myRoutes.open("ShortRoutes100.txt");
+    string s;
     myRoutes >> s;
     routesNum = stoi(s);
+    int start, end;
     for (int i = 0; i < routesNum; i++) {
         myRoutes >> s;
         start = stoi(s);
         myRoutes >> s;
         end = stoi(s);
-        routes[i] = { start,end };
+        findPath(start, end);
+        cout << endl;
     }
 
     myRoutes.close();
 }
 
-double calcDistance(pair<double,double> start, pair<double,double> end) {
-    return sqrt(pow(end.first - start.first, 2) +
-        pow(end.second - start.second, 2) * 1.0);
-}
-
-void findPath(int start, int end) {
-    vector<double> distance(verticesNum, 999999);
-    vector<int> from(verticesNum, -1);
-    
-    distance[start] = 0;
-    from[start] = start;
-
-}
-
 int main()
 {
-    //ReadInputs();
-
+    ReadMap();
+    
+    solve();
+    //findPath(4, 3);
 
     //std::cout << "Hello World!\n";
 }
